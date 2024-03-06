@@ -39,6 +39,7 @@ struct Radar {
     int MiniMapScaleY = 218;
     int MiniMapDotSize = 5;
     int MiniMapBlackBGSize = 0;
+    int linelength = 35;
     bool MiniMapGuides = false;
     
     bool BigMap = false;
@@ -79,6 +80,7 @@ struct Radar {
 		}
 	}
 
+
     void RenderUI() {
         if (ImGui::BeginTabItem("Radar", nullptr, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | ImGuiTabItemFlags_NoReorder)) {
 		ImVec2 TabSize;
@@ -110,7 +112,11 @@ struct Radar {
 				ImGui::Text("Enemy Identifier");
 				ImGui::SliderInt("Mini Map Radar Dot Size", &MiniMapDotSize, 0, 10);
 				ImGui::ColorEdit4("Circle Color##Radar", Modules::Radar::CircleColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
-			}
+
+                ImGui::Text("Enemy aiming line");
+                ImGui::SliderInt("Aiming line length", &linelength, 1, 75);
+                //ImGui::ColorEdit4("Circle Color##Radar", Modules::Radar::CircleColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
+            }
 			ImGui::EndChild();
 		}
 
@@ -127,7 +133,15 @@ struct Radar {
 				}
 				ImGui::TextColored(ImVec4(0.99, 0, 0, 0.99), "Make sure to close out of the in-game map before activating or you will crash!");
 			}
-			ImGui::EndChild();
+
+            //ImGui::Text("Show next ring");
+            //    if (ImGui::Button("Active")) {
+            //        Ring();
+
+            //    ImGui::TextColored(ImVec4(0.99, 0, 0, 0.99), "Make sure to close out of the in-game map before activating or you will crash!");
+            //}
+
+            ImGui::EndChild();
 		}
             ImGui::EndTabItem();
             }
@@ -190,7 +204,7 @@ struct Radar {
 		{
 			for (int i = 1; i <= 30; i++)
 			{
-				Renderer::TeamMiniMap(single.x, single.y, MiniMapDotSize, TeamID, targetyaw, MiniMapDotSize, MiniMapBlackBGSize, ImColor(Modules::Radar::CircleColor[0], Modules::Radar::CircleColor[1], Modules::Radar::CircleColor[2], Modules::Radar::CircleColor[3]));
+                Renderer::TeamMiniMap(single.x, single.y, MiniMapDotSize, TeamID, targetyaw, MiniMapDotSize, MiniMapBlackBGSize, linelength, ImColor(Modules::Radar::CircleColor[0], Modules::Radar::CircleColor[1], Modules::Radar::CircleColor[2], Modules::Radar::CircleColor[3]));
 			}
 		}
 	}

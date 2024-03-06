@@ -1,4 +1,4 @@
-// Externals
+ // Externals
 #pragma once
 #include <chrono>
 #include <thread>
@@ -25,6 +25,9 @@ GLFWwindow* OverlayWindow;
     int ScreenPosY;
  
     void GrabScreenSize() {
+        int count;
+        //GLFWmonitor **monitors = glfwGetMonitors(&count);
+        //GLFWmonitor* primaryMonitor = monitors[1];
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* vidMode = glfwGetVideoMode(primaryMonitor);
         glfwGetMonitorPos(primaryMonitor, &ScreenPosX, &ScreenPosY);
@@ -112,11 +115,11 @@ public:
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_REFRESH_RATE, 60);
+        glfwWindowHint(GLFW_REFRESH_RATE, 163);
 
         OverlayWindow = glfwCreateWindow(ScreenWidth, ScreenHeight, RandomString(12).c_str(), NULL, NULL);
 
@@ -125,6 +128,9 @@ public:
         glfwMakeContextCurrent(OverlayWindow);
         
         // Centering //
+        int count;
+        //GLFWmonitor **monitors = glfwGetMonitors(&count);
+        //GLFWmonitor* primaryMonitor = monitors[1];
         GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* vidMode = glfwGetVideoMode(primaryMonitor);
         glfwSetWindowPos(OverlayWindow, (vidMode->width - ScreenWidth) / 2, (vidMode->height - ScreenHeight) / 2);
@@ -1128,6 +1134,7 @@ public:
 	style.TabMinWidthForCloseButton	 	= TabMinWidthForCloseButton;
 	style.ButtonTextAlign 			= ButtonTextAlign;
 	style.SelectableTextAlign 		= SelectableTextAlign;
+	//style.AntiAliasedLines = false;
 
 	style.Colors[ImGuiCol_Text]                   = Text;
   	style.Colors[ImGuiCol_TextDisabled]           = TextDisabled;
@@ -1252,7 +1259,7 @@ public:
             glfwSwapBuffers(OverlayWindow);
             
             ProcessingTime = static_cast<int>(CurrentEpochMilliseconds() - StartTime);
-            SleepTime = 6; // 16.67 > 60hz | 6.97 > 144hz
+            SleepTime = 6.1349693251534; // 16.67 > 60hz | 6.97 > 144hz
             TimeLeftToSleep = std::max(0, SleepTime - ProcessingTime);
             std::this_thread::sleep_for(std::chrono::milliseconds(TimeLeftToSleep));
         }

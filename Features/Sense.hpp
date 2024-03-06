@@ -13,6 +13,9 @@
 #include "../Core/Level.hpp"
 
 #include "../Features/Aimbot.hpp"
+#include "../Utils//Conversion.hpp"
+#include "../Math/Resolver.hpp"
+
 
 #include "../Overlay/Overlay.hpp"
 #include "../Overlay/Renderer.hpp"
@@ -35,6 +38,9 @@
 // Geometry
 #define DEG2RAD(x) ((float)(x) * (float)(M_PI / 180.f))
 #define ABS(x) ((x < 0) ? (-x) : (x))
+
+
+
 
 struct Sense
 {
@@ -80,6 +86,7 @@ struct Sense
 	bool DrawCrosshair = true;
 	float CrosshairSize = 7.0;
 	float CrosshairThickness = 1.0;
+    bool aimline = true;
 
 	// Settings
 	float GameFOV = 120;
@@ -95,6 +102,7 @@ struct Sense
 	int TotalSpectators = 0;
 	std::vector<std::string> Spectators;
 	Level *Map;
+    Player* p = nullptr;
 
 	Sense(Level *Map, std::vector<Player *> *Players, Camera *GameCamera, LocalPlayer *Myself, XDisplay *X11Display)
 	{
@@ -122,7 +130,7 @@ struct Sense
 					ImGui::SetTooltip("Draw a box on the enemy");
 				if (DrawBoxes)
 				{
-					const char *BoxTypeIndex[] = {"2D", "2D Filled"};
+					const char *BoxTypeIndex[] = {"2D", "2D Corners"};
 					ImGui::Combo("Box Type", &BoxType, BoxTypeIndex, IM_ARRAYSIZE(BoxTypeIndex));
 					if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 						ImGui::SetTooltip("What Type Of Box Will Be Displayed.");
@@ -323,9 +331,9 @@ struct Sense
 					}
 				}
 
-				ImGui::Checkbox("Draw Names [!]", &DrawNames);
+				ImGui::Checkbox("Draw Names", &DrawNames);
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-					ImGui::SetTooltip("Show enemies names.\n[!] Not Currently Working.");
+					ImGui::SetTooltip("Show enemies names.");
 				if (DrawNames)
 				{
 					ImGui::SameLine();
@@ -375,9 +383,9 @@ struct Sense
 				ImGui::SameLine();
 				ImGui::ColorEdit4("Team Color", Modules::Colors::TeamColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
 
-				ImGui::Checkbox("Show Team Names [!]", &TeamNames);
+				ImGui::Checkbox("Show Team Names", &TeamNames);
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-					ImGui::SetTooltip("Draw Name ESP on Teammates\n[!] Not Currently Working.");
+					ImGui::SetTooltip("Draw Name ESP on Teammates");
 				ImGui::SameLine();
 				ImGui::ColorEdit4("Team Name Color", Modules::Colors::TeamNameColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
 
@@ -650,14 +658,14 @@ struct Sense
 			if (Modules::Watermark::Spectators)
 			{
 				std::chrono::milliseconds Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-				if (Now >= LastUpdateTime + std::chrono::milliseconds(1500))
+				if (Now >= LastUpdateTime + std::chrono::milliseconds(500))
 				{
 					int TempTotalSpectators = 0;
 					std::vector<std::string> TempSpectators;
 
 					for (int i = 0; i < Players->size(); i++)
 					{
-						Player *p = Players->at(i);
+                        Player *p = Players->at(i);
 						if (p->BasePointer == Myself->BasePointer)
 							continue;
 						if (p->GetViewYaw() == Myself->ViewYaw && p->IsDead)
@@ -723,6 +731,7 @@ struct Sense
 			return;
 		if (Myself->IsDead)
 			return;
+
 		if (ShowSpectators)
 		{
 			ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
@@ -776,7 +785,7 @@ struct Sense
 		}
 
 		// Draw FOV Circle
-		if (DrawFOVCircle && !AimAssistState->AimbotMode == 1 && Myself->IsCombatReady())
+        if (DrawFOVCircle && (!AimAssistState->AimbotMode == 1 || AimAssistState->AimbotMode == 2) && Myself->IsCombatReady())
 		{
 			float FOV = std::min(AimAssistState->FOV, AimAssistState->FOV * (AimAssistState->GetFOVScale() * AimAssistState->ZoomScale));
 			float Radius = tanf(DEG2RAD(FOV) / 2) / tanf(DEG2RAD(GameFOV) / 2) * ScreenWidth;
@@ -784,7 +793,7 @@ struct Sense
 		}
 
 		// Draw Filled FOV Circle
-		if (DrawFilledFOVCircle && !AimAssistState->AimbotMode == 1 && Myself->IsCombatReady())
+        if (DrawFilledFOVCircle && (!AimAssistState->AimbotMode == 1 || AimAssistState->AimbotMode == 2) && Myself->IsCombatReady())
 		{
 			float FOV = std::min(AimAssistState->FOV, AimAssistState->FOV * (AimAssistState->GetFOVScale() * AimAssistState->ZoomScale));
 			float Radius = tanf(DEG2RAD(FOV) / 2) / tanf(DEG2RAD(GameFOV) / 2) * ScreenWidth;
@@ -797,11 +806,28 @@ struct Sense
 		{
 			Player *p = Players->at(i);
 
+
+
+
+
 			if (!p->IsLocal && p->IsCombatReady() && p->DistanceToLocalPlayer < (Conversion::ToGameUnits(ESPMaxDistance)))
 			{
-				Vector2D LocalOriginW2S, HeadPositionW2S;
-				bool bLocalOriginW2SValid = GameCamera->WorldToScreen(p->LocalOrigin, LocalOriginW2S);
-				bool bHeadPositionW2SValid = GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::Head), HeadPositionW2S);
+				Vector2D LocalOriginW2S, HeadPositionW2S, HeadPositionSK;
+				//bool bLocalOriginW2SValid = GameCamera->WorldToScreen(p->LocalOrigin, LocalOriginW2S);
+				//bool bHeadPositionW2SValid = GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::Head), HeadPositionW2S);
+				
+				
+				Vector3D entFeet = p->LocalOrigin;//Memory::Read<Vector3D>(p->BasePointer + OFF_LOCAL_ORIGIN)
+                                Vector3D entHead = p->GetBonePosition(HitboxType::Head);//entFeet; entHead.z += 35.f//p->GetBonePosition(HitboxType::Head);
+
+
+                if(BoxType == 1){ entHead.z += 10.f; }
+
+                                
+                                GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::Head), HeadPositionSK);
+
+				bool bLocalOriginW2SValid = GameCamera->WorldToScreen(entFeet, LocalOriginW2S);
+				bool bHeadPositionW2SValid = GameCamera->WorldToScreen(entHead, HeadPositionW2S);
 				/*if(!bLocalOriginW2SValid)
 				{
 					std::cout << "bLocalOriginW2SValid = false" << std::endl;
@@ -815,18 +841,105 @@ struct Sense
 				{ // Always shows esp
 					PlayersNear++;
 
+
+                    if(aimline)
+                    {
+                        Vector3D DesiredAngles;
+                        Vector2D ppos;
+
+
+                        Vector3D localPos = Myself->CameraPosition;
+                        Vector3D entityPos = p->GetBonePosition(HitboxType::Head);
+
+                        float distance = localPos.Distance(entityPos);
+                        Vector3D ptrVelocity = p->AbsoluteVelocity;
+
+                        float bulletGravity = Myself->WeaponProjectileScale;
+                        float bulletSpeed = Myself->WeaponProjectileSpeed;
+                        long WeaponID = Myself->WeaponEntity;
+
+                        entityPos = Resolver::PredictPos(entityPos, ptrVelocity, distance, bulletSpeed, bulletGravity, WeaponID);
+
+                        //float time = localPos.Distance(entityPos) / bulletSpeed;
+                        //entityPos.z += (750 * bulletGravity * 0.5f) * (time * time);
+                        //Vector3D velDelta = ptrVelocity * time;
+                        //entityPos.x += velDelta.x;
+                        //entityPos.y += velDelta.y;
+                        //entityPos.z += velDelta.z;
+
+
+                        //Vector2D calcedAngle = CalcAngle(localPos, entityPos);
+                        //Vector2D viewAngle = Read<Vector2>(ProcessId, LocalPlayer + OFFSET_VIEWANGLES);
+                        //Vector2D newAngle = smoothAimMove(viewAngle, calcedAngle, AimBot_Smooth);
+                        //newAngle.Normalize();
+
+
+
+                        GameCamera->WorldToScreen(entityPos, ppos);
+
+                        //if (weapon.bullet_speed().value != 1.0f ) {
+                        //    auto bullet_time = target_pos.distance(Myself->CameraPosition) / weapon.bullet_speed().value;
+                        //    target_pos.z += 750.0f * weapon.bullet_scale().value * 0.5f * (bullet_time * bullet_time);
+                        //    bullet_time = target_pos.distance(local_head) / weapon.bullet_speed().value;
+                        //    target_pos += target.abs_velocity().value * bullet_time;
+                        //}
+
+
+                        Renderer::DrawLine(Canvas, HeadPositionSK, ppos, 1.f, ImColor(255,0,0));
+                    }
+
+
 					// Draw Info Bars
 					if (HealthBar && bLocalOriginW2SValid && bHeadPositionW2SValid)
 					{
-						int health = p->Health;
-						int maxHealth = p->MaxHealth;
-						int shield = p->Shield;
-						int maxShield = p->MaxShield;
+					
+					ImColor ShieldColor;
+						if (p->MaxShield == 50)
+						{ // white
+							ShieldColor = ImColor(247, 247, 247);
+						}
+						else if (p->MaxShield == 75)
+						{ // blue
+							ShieldColor = ImColor(39, 178, 255);
+						}
+						else if (p->MaxShield == 100)
+						{ // purple
+							ShieldColor = ImColor(206, 59, 255);
+						}
+						else if (p->MaxShield == 125)
+						{ // red
+							ShieldColor = ImColor(219, 2, 2);
+						}
+						else
+						{
+							ShieldColor = ImColor(247, 247, 247);
+						}
+				
+				int curhealth = p->Health;
+				int maxHealth = p->MaxHealth;
+				int shield = p->Shield;
+				int maxShield = p->MaxShield;
 
 						if (p->IsHostile)
-						{
-							Renderer::Draw2DBar(Canvas, BarMode, BarStyle, Modules::Sense::BarColorMode, Modules::Sense::BarBackground, LocalOriginW2S, HeadPositionW2S, health, maxHealth, shield, maxShield, BarThickness, BarThickness2, BarWidth, BarHeight, ImColor(Modules::Colors::BarBGColor[0], Modules::Colors::BarBGColor[1], Modules::Colors::BarBGColor[2], Modules::Colors::BarBGColor[3]));
+						{ 
+						Vector2D Head, Foot;
+				
+                        Vector3D entFeet = p->LocalOrigin;//Memory::Read<Vector3D>(p->BasePointer + OFF_LOCAL_ORIGIN)
+                        Vector3D entHead = p->GetBonePosition(HitboxType::Head);//entFeet; entHead.z += 35.f//p->GetBonePosition(HitboxType::Head);
+                        entHead.z += 10.f;
+                                
+                        GameCamera->WorldToScreen(entHead, Head);
+                        GameCamera->WorldToScreen(entFeet, Foot);
+
+                        float height = Head.y - Foot.y;
+                        float width = height / 2.f;
+                        float width2 = width / 10;
+                        if (width2 < 2.f) width2 = 2.;
+                        if (width2 > 3) width2 = 3.;
+                        Renderer::DrawProgressBar(Canvas, Foot.x - 3.5f + (width / 2) - width2, Foot.y, width2, Foot.y - Head.y, p->Health, 100, ImColor(0,255,0));
+                        Renderer::DrawProgressBar(Canvas, Foot.x - 8.5f + (width / 2) - width2, Foot.y, width2, Foot.y - Head.y, p->Shield, p->MaxShield, ShieldColor);
 						}
+
 					}
 
 					// Draw Health + Shield Text
@@ -1025,51 +1138,64 @@ struct Sense
 					// Show Legend
 					if (ShowLegend)
 					{
-						if (p->IsHostile && p->IsVisible && bLocalOriginW2SValid && bHeadPositionW2SValid && !p->IsDummy())
+					 float height = HeadPositionW2S.y - LocalOriginW2S.y;
+		                         float width = height / 4.f;           
+		                         float x = (LocalOriginW2S.x + width) - (width * 2) + 4.f ;
+
+                        if (p->IsHostile && p->IsVisible && bLocalOriginW2SValid && bHeadPositionW2SValid && !p->IsDummy())
 						{
-							Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), p->getPlayerModelName().c_str(), ImColor(Modules::Colors::VisibleLegendColor[0], Modules::Colors::VisibleLegendColor[1], Modules::Colors::VisibleLegendColor[2], Modules::Colors::VisibleLegendColor[3]), true, true, false);
+							Renderer::DrawText(Canvas, Vector2D(x, HeadPositionW2S.y - 2.5), p->getPlayerModelName().c_str(), ImColor(Modules::Colors::VisibleLegendColor[0], Modules::Colors::VisibleLegendColor[1], Modules::Colors::VisibleLegendColor[2], Modules::Colors::VisibleLegendColor[3]), true, false, false);
 						}
 						if (p->IsHostile && !p->IsVisible && bLocalOriginW2SValid && bHeadPositionW2SValid && !p->IsDummy())
 						{
-							Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), p->getPlayerModelName().c_str(), ImColor(Modules::Colors::InvisibleLegendColor[0], Modules::Colors::InvisibleLegendColor[1], Modules::Colors::InvisibleLegendColor[2], Modules::Colors::InvisibleLegendColor[3]), true, true, false);
+							Renderer::DrawText(Canvas, Vector2D(x, HeadPositionW2S.y - 2.5), p->getPlayerModelName().c_str(), ImColor(Modules::Colors::InvisibleLegendColor[0], Modules::Colors::InvisibleLegendColor[1], Modules::Colors::InvisibleLegendColor[2], Modules::Colors::InvisibleLegendColor[3]), true, false, false);
 						}
 					}
 
 					// Distance
 					if (DrawDistance && bLocalOriginW2SValid && bHeadPositionW2SValid)
 					{
-						if (ShowTeam)
+					 char buffer[256];
+                     const char* dist = std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str();
+                     const char* txt = "[";
+                     const char* txt2 = " M]";
+
+                     strncpy(buffer, txt, sizeof(buffer));
+                     strncat(buffer, dist, sizeof(buffer));
+                     strncat(buffer, txt2, sizeof(buffer));
+                                                                           
+                        if (ShowTeam)
 						{
-							if (!HeadPositionW2S.IsZeroVector())
+                            if (!LocalOriginW2S.IsZeroVector())
 							{
 								if (p->IsAlly)
 								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(255, 255, 255), true, true, false);
+									//Renderer::DrawText(Canvas, Vector2D(x, LocalOriginW2S.y - 10.0f), buffer, ImColor(255, 255, 255), true, false, false);
 								}
-								if (p->IsHostile && p->IsVisible)
+                                if (p->IsHostile  && !p->IsVisible)
+                                {
+                                    Renderer::DrawText(Canvas, Vector2D(LocalOriginW2S.x, LocalOriginW2S.y +2.f), buffer, ImColor(Modules::Colors::InvisibleDistanceColor[0], Modules::Colors::InvisibleDistanceColor[1], Modules::Colors::InvisibleDistanceColor[2], Modules::Colors::InvisibleDistanceColor[3]), true, true, false);
+                                }
+                                if (p->IsHostile  && p->IsVisible)
 								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
-								}
-								if (p->IsHostile && !p->IsVisible)
-								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::InvisibleDistanceColor[0], Modules::Colors::InvisibleDistanceColor[1], Modules::Colors::InvisibleDistanceColor[2], Modules::Colors::InvisibleDistanceColor[3]), true, true, false);
+                                    Renderer::DrawText(Canvas, Vector2D(LocalOriginW2S.x, LocalOriginW2S.y +2.f), buffer, ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
 								}
 							}
 						}
 						if (!ShowTeam)
 						{
-							if (!HeadPositionW2S.IsZeroVector())
+                            if (!LocalOriginW2S.IsZeroVector())
 							{
-								if (p->IsHostile && p->IsVisible)
-								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
-								}
-								if (p->IsHostile && !p->IsVisible)
-								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::InvisibleDistanceColor[0], Modules::Colors::InvisibleDistanceColor[1], Modules::Colors::InvisibleDistanceColor[2], Modules::Colors::InvisibleDistanceColor[3]), true, true, false);
-								}
+                                if (p->IsHostile && p->IsVisible)
+                                    Renderer::DrawText(Canvas, Vector2D(LocalOriginW2S.x, LocalOriginW2S.y +2.f), buffer, ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
+                                if (p->IsHostile  && !p->IsVisible)
+                                    Renderer::DrawText(Canvas, Vector2D(LocalOriginW2S.x, LocalOriginW2S.y +2.f), buffer, ImColor(Modules::Colors::InvisibleDistanceColor[0], Modules::Colors::InvisibleDistanceColor[1], Modules::Colors::InvisibleDistanceColor[2], Modules::Colors::InvisibleDistanceColor[3]), true, true, false);
+
+
 							}
 						}
+
+               
 					}
 
 					// Draw Names
@@ -1281,6 +1407,19 @@ struct Sense
 									weaponHeldColor = ImColor(Modules::Colors::MeleeWeaponColor[0], Modules::Colors::MeleeWeaponColor[1], Modules::Colors::MeleeWeaponColor[2], Modules::Colors::MeleeWeaponColor[3]);
 								}
 							}
+                                                        
+                                                        float height = HeadPositionW2S.y - LocalOriginW2S.y;
+		                         float width = height / 4.f;           
+		                         float x = (LocalOriginW2S.x + width) - (width * 2) + 4.f ;
+				         
+					 char buffer[256];
+                                         const char* dist = std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str();
+                                         const char* txt = "[";
+                                         const char* txt2 = " M]";
+                                         strncpy(buffer, txt, sizeof(buffer));
+                                         strncat(buffer, dist, sizeof(buffer));
+                                         strncat(buffer, txt2, sizeof(buffer));
+
 
 							if (Modules::Colors::WeaponColorMode == 1)
 							{ // Changes color to ammo type
@@ -1299,6 +1438,7 @@ struct Sense
 							}
 							if (Modules::Colors::WeaponColorMode == 0)
 							{ // Single Color
+							
 								if (p->IsHostile && p->IsVisible)
 								{
 									if (DrawWeapon && DrawStatus)
@@ -1308,7 +1448,7 @@ struct Sense
 
 									if (DrawWeapon && !DrawStatus)
 									{
-										Renderer::DrawText(Canvas, LocalOriginW2S.Add(Vector2D(0, 0)), weaponHeldText, ImColor(Modules::Colors::VisibleWeaponColor[0], Modules::Colors::VisibleWeaponColor[1], Modules::Colors::VisibleWeaponColor[2], Modules::Colors::VisibleWeaponColor[3]), true, true, false);
+										Renderer::DrawText(Canvas, Vector2D(x, LocalOriginW2S.y - 10.0f), weaponHeldText, ImColor(Modules::Colors::VisibleWeaponColor[0], Modules::Colors::VisibleWeaponColor[1], Modules::Colors::VisibleWeaponColor[2], Modules::Colors::VisibleWeaponColor[3]), true, false, false);
 									}
 								}
 								if (p->IsHostile && !p->IsVisible)
@@ -1320,7 +1460,7 @@ struct Sense
 
 									if (DrawWeapon && !DrawStatus)
 									{
-										Renderer::DrawText(Canvas, LocalOriginW2S.Add(Vector2D(0, 0)), weaponHeldText, ImColor(Modules::Colors::InvisibleWeaponColor[0], Modules::Colors::InvisibleWeaponColor[1], Modules::Colors::InvisibleWeaponColor[2], Modules::Colors::InvisibleWeaponColor[3]), true, true, false);
+										Renderer::DrawText(Canvas, Vector2D(x, LocalOriginW2S.y - 10.0f), weaponHeldText, ImColor(Modules::Colors::InvisibleWeaponColor[0], Modules::Colors::InvisibleWeaponColor[1], Modules::Colors::InvisibleWeaponColor[2], Modules::Colors::InvisibleWeaponColor[3]), true, false, false);
 									}
 								}
 							}
@@ -1370,6 +1510,7 @@ struct Sense
 							{
 								Renderer::Draw2DBox(Canvas, BoxType, BoxStyle, LocalOriginW2S, HeadPositionW2S, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]), ImColor(Modules::Colors::VisibleFilledBoxColor[0], Modules::Colors::VisibleFilledBoxColor[1], Modules::Colors::VisibleFilledBoxColor[2], Modules::Colors::VisibleFilledBoxColor[3]), BoxThickness);
 							}
+							
 						}
 					}
 
@@ -1377,8 +1518,11 @@ struct Sense
 					if (Skeleton && bLocalOriginW2SValid && bHeadPositionW2SValid)
 					{
 
-						Vector2D Neck, UpperChest, LowerChest, Stomach, Leftshoulder, Leftelbow, LeftHand, Rightshoulder, RightelbowBone, RightHand, LeftThighs, Leftknees, Leftleg, RightThighs, Rightknees, Rightleg;
+						Vector2D Head, Neck, UpperChest, LowerChest, Stomach, Leftshoulder, Leftelbow, LeftHand, Rightshoulder, RightelbowBone, RightHand, LeftThighs, Leftknees, Leftleg, RightThighs, Rightknees, Rightleg;
 						//Head bone is HeadPositionW2S
+						Vector3D HeadPos = p->GetBonePosition(HitboxType::Head);
+                        HeadPos.z += 3.f;
+						GameCamera->WorldToScreen(HeadPos, Head);
 						GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::Neck), Neck);
 						GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::UpperChest), UpperChest);
 						GameCamera->WorldToScreen(p->GetBonePosition(HitboxType::LowerChest), LowerChest);
@@ -1400,7 +1544,10 @@ struct Sense
 						{
 							if (p->IsHostile && p->IsVisible)
 							{
-								Renderer::DrawLine(Canvas, HeadPositionW2S, Neck, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
+							
+                                Renderer::DrawCircle(Canvas, Head, 3650 / p->DistanceToLocalPlayer, 255, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]), 1.f);
+
+                                Renderer::DrawLine(Canvas, HeadPositionSK, Neck, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, Neck, UpperChest, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, UpperChest, LowerChest, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, LowerChest, Stomach, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
@@ -1419,7 +1566,9 @@ struct Sense
 							}
 							if (p->IsHostile && !p->IsVisible)
 							{
-								Renderer::DrawLine(Canvas, HeadPositionW2S, Neck, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
+                                Renderer::DrawCircle(Canvas, Head, 3650 / p->DistanceToLocalPlayer, 255, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]), 1.f);
+
+                                Renderer::DrawLine(Canvas, HeadPositionSK, Neck, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, Neck, UpperChest, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, UpperChest, LowerChest, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, LowerChest, Stomach, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
@@ -1442,7 +1591,9 @@ struct Sense
 						{
 							if (p->IsHostile && p->IsVisible)
 							{
-								Renderer::DrawLine(Canvas, HeadPositionW2S, Neck, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
+                                Renderer::DrawCircle(Canvas, Head, 3650 / p->DistanceToLocalPlayer, 255, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]), 1.f);
+
+                                Renderer::DrawLine(Canvas, HeadPositionSK, Neck, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, Neck, UpperChest, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, UpperChest, LowerChest, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, LowerChest, Stomach, SkeletonThickness, ImColor(Modules::Colors::VisibleSkeletonColor[0], Modules::Colors::VisibleSkeletonColor[1], Modules::Colors::VisibleSkeletonColor[2], Modules::Colors::VisibleSkeletonColor[3]));
@@ -1461,7 +1612,9 @@ struct Sense
 							}
 							if (p->IsHostile && !p->IsVisible)
 							{
-								Renderer::DrawLine(Canvas, HeadPositionW2S, Neck, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
+                                Renderer::DrawCircle(Canvas, Head, 3650 / p->DistanceToLocalPlayer, 255, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]), 1.f);
+
+                                Renderer::DrawLine(Canvas, HeadPositionSK, Neck, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, Neck, UpperChest, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, UpperChest, LowerChest, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
 								Renderer::DrawLine(Canvas, LowerChest, Stomach, SkeletonThickness, ImColor(Modules::Colors::InvisibleSkeletonColor[0], Modules::Colors::InvisibleSkeletonColor[1], Modules::Colors::InvisibleSkeletonColor[2], Modules::Colors::InvisibleSkeletonColor[3]));
@@ -1481,7 +1634,9 @@ struct Sense
 
 							if (p->IsAlly)
 							{
-								Renderer::DrawLine(Canvas, HeadPositionW2S, Neck, SkeletonThickness, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]));
+                                Renderer::DrawCircle(Canvas, Head, 3650 / p->DistanceToLocalPlayer, 255, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]), 1.f);
+							
+								Renderer::DrawLine(Canvas, HeadPositionSK, Neck, SkeletonThickness, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]));
 								Renderer::DrawLine(Canvas, Neck, UpperChest, SkeletonThickness, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]));
 								Renderer::DrawLine(Canvas, UpperChest, LowerChest, SkeletonThickness, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]));
 								Renderer::DrawLine(Canvas, LowerChest, Stomach, SkeletonThickness, ImColor(Modules::Colors::TeamColor[0], Modules::Colors::TeamColor[1], Modules::Colors::TeamColor[2], Modules::Colors::TeamColor[3]));
@@ -1523,7 +1678,7 @@ struct Sense
 					// Draw Info Bars
 					if (HealthBar && bLocalOriginW2SValid && bHeadPositionW2SValid)
 					{
-						int health = p->Health;
+					int health = p->Health;
 						int maxHealth = p->MaxHealth;
 						int shield = p->Shield;
 						int maxShield = p->MaxShield;
@@ -1533,6 +1688,8 @@ struct Sense
 							Renderer::Draw2DBar(Canvas, BarMode, BarStyle, Modules::Sense::BarColorMode, Modules::Sense::BarBackground, LocalOriginW2S, HeadPositionW2S, health, maxHealth, shield, maxShield, BarThickness, BarThickness2, BarWidth, BarHeight, ImColor(Modules::Colors::BarBGColor[0], Modules::Colors::BarBGColor[1], Modules::Colors::BarBGColor[2], Modules::Colors::BarBGColor[3]));
 						}
 					}
+					
+					
 
 					// Draw Health + Shield Text
 					if (DrawStatus && bLocalOriginW2SValid)
@@ -1721,11 +1878,11 @@ struct Sense
 							{
 								if (p->IsAlly && p->IsVisible)
 								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(255, 255, 255), true, true, false);
+									//Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(255, 255, 255), true, true, false);
 								}
 								if (p->IsHostile && p->IsVisible)
 								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
+                                    Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
 								}
 							}
 						}
@@ -1735,7 +1892,7 @@ struct Sense
 							{
 								if (p->IsHostile && p->IsVisible)
 								{
-									Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
+                                    Renderer::DrawText(Canvas, HeadPositionW2S.Subtract(Vector2D(0, 12)), std::to_string((int)Conversion::ToMeters(p->DistanceToLocalPlayer)).c_str(), ImColor(Modules::Colors::VisibleDistanceColor[0], Modules::Colors::VisibleDistanceColor[1], Modules::Colors::VisibleDistanceColor[2], Modules::Colors::VisibleDistanceColor[3]), true, true, false);
 								}
 							}
 						}

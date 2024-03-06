@@ -296,9 +296,9 @@ struct Misc {
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 				Memory::Write<int>(Myself->BasePointer + OFF_IN_JUMP + 0x08, 4);
 			}
-		}
-    	}
-    } //End of update
+        }
+    }
+} //End of update
     	
     	/*if (QuickTurn) {
   		FloatVector2D localYawtoClamp = Myself->viewAngles;

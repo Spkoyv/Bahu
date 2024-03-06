@@ -109,7 +109,9 @@ struct QAngle {
             y -= 360.f;
 
         while (y < -180.f)
+        {
             y += 360.f;
+        }
 
         return *this;
     }

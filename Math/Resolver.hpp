@@ -2,9 +2,23 @@
 #include <cmath>
 #include "Vector3D.hpp"
 #include "QAngle.hpp"
+#include "Utils/Memory.hpp"
+
 
 class Resolver {
 public:
+
+    static Vector3D PredictPos(Vector3D NowPos, Vector3D NowVelocity, float Distance, float BulletSpeed, float BulletGravity, long WeaponID) {
+        if (BulletSpeed == 1.0f) return NowPos;
+        //if (BulletSpeed == 10000.0f) BulletSpeed += pow(Memory::Read<int>(WeaponID + OFFSET_LAST_CHARGE_LEVEL), 5.468438819581);
+        float FlyTime = Distance / BulletSpeed;
+        Vector3D NewPos;
+        NewPos = NowPos + NowVelocity * FlyTime;
+        NewPos.z += 350.f * BulletGravity * FlyTime * FlyTime;
+        return NewPos;
+    }
+
+
     static QAngle CalculateAngle(Vector3D from, Vector3D to) {
         Vector3D newDirection = to.Subtract(from);
         newDirection.Normalize();
@@ -73,6 +87,35 @@ public:
 
         targetPosition = GetTargetPosition(start, targetPosition, targetVelocity, bulletSpeed);
         result = CalculateAngle(start, targetPosition);
+        return true;
+    }
+
+    static bool CalculateAimRotationNew2(Vector3D start, Vector3D targetPosition, Vector3D targetVelocity, float bulletSpeed, float bulletScale, int steps, Vector3D& result) {
+        const float gravity = 750.0f / bulletScale;
+
+        float angle = 0;
+        float time = 0.0;
+        float timeStep = 1.0f / steps;
+
+        for(int i = 0; i < steps; i++) {
+            Vector3D predictedPosition = GetTargetPosition(targetPosition, targetVelocity, time);
+            if (!OptimalAngle(start, predictedPosition, bulletSpeed, gravity, angle))
+                continue;
+
+            Vector3D direction = predictedPosition.Subtract(start);
+            float horizontalDistance = direction.Magnitude2D();
+            float travelTime = horizontalDistance / (bulletSpeed * cosf(angle));
+            if (travelTime <= time){
+                result.x = -angle  * (180 / M_PI);
+                result.y = atan2f(direction.y, direction.x)  * (180 / M_PI); //180
+
+                return true;
+            }
+            time += timeStep;
+        }
+
+        //targetPosition = GetTargetPosition(start, targetPosition, targetVelocity, bulletSpeed);
+        //result = CalculateAngle(start, targetPosition);
         return true;
     }
 

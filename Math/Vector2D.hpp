@@ -9,6 +9,37 @@ struct Vector2D {
     float operator[](int i) const;
 	float& operator[](int i);
 
+    inline Vector2D operator*(const float scalar) const {
+        return Vector2D(x * scalar, y * scalar);
+    }
+
+    inline Vector2D operator/(const float scalar) const {
+        return Vector2D(x / scalar, y / scalar);
+    }
+
+    inline Vector2D operator+(const Vector2D& other) const {
+        return Vector2D(x + other.x, y + other.y);
+    }
+
+    inline Vector2D operator-(const Vector2D& other) const {
+        return Vector2D(x - other.x, y - other.y);
+    }
+
+    void NormalizeR()
+    {
+        while (x > 89.0f)
+            x -= 180.f;
+
+        while (x < -89.0f)
+            x += 180.f;
+
+        while (y > 180.f)
+            y -= 360.f;
+
+        while (y < -180.f)
+            y += 360.f;
+    }
+
     Vector2D Subtract(const Vector2D& other) const {
         return Vector2D(x - other.x, y - other.y);
     }

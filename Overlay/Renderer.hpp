@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/gl.h>
 #include <algorithm>
+#include "../Features/Sense.hpp"
 #include "../imgui/imgui.h"
 #include "../Utils/Color.hpp"
 #include "../Utils/Modules.hpp"
@@ -107,19 +108,11 @@ public:
             }
         }
         if (Type == 1) { //2D Box + 2D Filled Box
-            if (Style == 0) {
-                float height = head.y - foot.y;
-    	        float width = height / 2.0f;
-    	        canvas->AddRect(ImVec2(foot.x - (width / 2), foot.y), ImVec2(head.x + (width/2), head.y+(height*0.2)), color2D, 0.0f, 0, thickness);
-                canvas->AddRectFilled(ImVec2(foot.x - (width / 2), foot.y), ImVec2(head.x + (width/2), head.y+(height*0.2)), Filledcolor, 0.0f, 0);
-            }
-            if (Style == 1) {
-                float Height = (head.y - foot.y);
-                Vector2D rectTop = Vector2D(head.x - Height / 3, head.y);
-                Vector2D rectBottom = Vector2D(foot.x + Height / 3, foot.y);
-                canvas->AddRect(ImVec2(rectBottom.x, rectBottom.y), ImVec2(rectTop.x, rectTop.y + (Height*0.2)), color2D, 0.0f, 0, thickness);
-                canvas->AddRectFilled(ImVec2(rectBottom.x, rectBottom.y), ImVec2(rectTop.x, rectTop.y + (Height*0.2)), Filledcolor, thickness);
-            }
+            float height = head.y - foot.y;
+            float width = height / 2.0f;
+            float x = foot.x - (width / 2.f);
+	 
+            Renderer::DrawCorneredBox(canvas, x, foot.y, width, height, color2D, thickness);
         }
     }
 
@@ -310,6 +303,60 @@ public:
             }
         }
     }
+
+
+static void DrawRectFilled(ImDrawList* canvas, float x, float y, float x2, float y2, ImColor color, float rounding, int rounding_corners_flags) {
+	    canvas->AddRectFilled(ImVec2(x, y), ImVec2(x2, y2), color, rounding, rounding_corners_flags);
+    }
+    
+    static void DrawProgressBar(ImDrawList* canvas, float x, float y, float w, float h, int value, int v_max, ImColor barColor)
+   {
+
+
+	DrawRectFilled(canvas, x, y, x + w, y - ((h / float(v_max)) * (float)value), barColor, 0.0f, 0);
+	
+        canvas->AddRect(ImVec2(x-1, y - 1), ImVec2(x + w +1, y - h+1), ImColor(0, 0, 0), 0, 1);
+   }
+   
+    static void DrawCorneredBox(ImDrawList* canvas,  float X, float Y, float W, float H, ImColor color, float thickness) {
+		float lineW = (W / 4);
+		float lineH = (H / 5.5);
+		float lineT = -thickness;
+
+
+	//corners
+	DrawLine(canvas,Vector2D(X, Y +thickness/2), Vector2D(X, Y + lineH), thickness, color);//bot right vert
+	DrawLine(canvas,Vector2D(X +thickness/2, Y), Vector2D(X + lineW, Y), thickness, color);
+ 
+	DrawLine(canvas,Vector2D(X + W - lineW, Y), Vector2D(X + W -thickness / 2, Y), thickness, color);//bot left hor
+	DrawLine(canvas,Vector2D(X + W, Y +thickness/2), Vector2D(X + W, Y + lineH), thickness, color);
+
+	DrawLine(canvas,Vector2D(X, Y + H - lineH), Vector2D(X, Y + H-(thickness/2)), thickness, color);//top right vert
+    DrawLine(canvas,Vector2D(X +thickness/2, Y + H), Vector2D(X + lineW, Y + H), thickness, color);
+
+	DrawLine(canvas,Vector2D(X + W - lineW, Y + H), Vector2D(X + W-thickness/2, Y + H), thickness, color);//top left hor
+	DrawLine(canvas,Vector2D(X + W, Y + H - lineH), Vector2D(X + W, Y + H - (thickness/ 2)), thickness, color);
+
+	//black outlines   
+    ImColor Black = ImColor(0, 0, 0);
+        
+	DrawLine(canvas,Vector2D(X - lineT, Y - lineT +thickness/2), Vector2D(X - lineT, Y + lineH), thickness , Black); //bot right vert
+    DrawLine(canvas,Vector2D(X - lineT +thickness/2, Y - lineT), Vector2D(X + lineW, Y - lineT), thickness , Black);
+        
+	DrawLine(canvas,Vector2D(X + W - lineW, Y - lineT), Vector2D(X + W - (thickness/ 2) + lineT, Y - lineT), thickness , Black); //bot left hor
+	DrawLine(canvas,Vector2D(X + W + lineT, Y - lineT +thickness/2), Vector2D(X + W + lineT, Y + lineH), thickness , Black);
+	
+    DrawLine(canvas,Vector2D(X - lineT, Y + H - lineH), Vector2D(X - lineT, Y + H -(thickness/2) + lineT ), thickness , Black); //top right vert
+	DrawLine(canvas,Vector2D(X +thickness/2 - lineT, Y + H + lineT), Vector2D(X + lineW, Y + H + lineT), thickness , Black); //top right hor
+	
+	DrawLine(canvas,Vector2D(X + W - lineW, Y + H + lineT), Vector2D(X + W - (thickness/ 2) + lineT , Y + H + lineT), thickness , Black); //top left hor
+	DrawLine(canvas,Vector2D(X + W + lineT, Y + H - lineH), Vector2D(X + W + lineT, Y + H + lineT - (thickness/ 2)), thickness , Black);
+          
+        
+        
+        
+}
+
 
     static void DrawSeer(ImDrawList* Canvas, float x, float y, int shield, int max_shield, int health) {
         int bg_offset = 3;
@@ -625,8 +672,8 @@ public:
     	return Vector3D(x_1, y_1, 0);
     }
     
-    static void TeamMiniMap(int x, int y, int radius, int teamID, float targetyaw, int dotSize, int outlineSize, const ImColor& circleColor) {
-        auto colOutline = ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 0.0, 1.0));
+    static void TeamMiniMap(int x, int y, int radius, int teamID, float targetyaw, int dotSize, int outlineSize, int aimlinelength, const ImColor& circleColor) {
+        auto colOutline = ImGui::ColorConvertFloat4ToU32(ImVec4(255, 255, 255, 1.0));
         ImVec2 center(x, y);
         //ImGui::GetWindowDrawList()->AddCircleFilled(center, radius, ImGui::ColorConvertFloat4ToU32(ImVec4(0.99, 0, 0, 0.99)));
         //ImGui::GetWindowDrawList()->AddCircle(center, radius, colOutline, 12, radius);
@@ -637,7 +684,7 @@ public:
         const int numPlayers = 3;
         for (int i = 0; i < numPlayers; i++) {
             float angle = (360.0 - targetyaw) * (M_PI / 180.0); // Replace this with the actual yaw of the player, then convert it to radians.
-            ImVec2 endpoint(center.x + radius * cos(angle), center.y + radius * sin(angle));
+            ImVec2 endpoint(center.x + radius * cos(angle) + aimlinelength, center.y + radius * sin(angle) + aimlinelength);
             ImGui::GetWindowDrawList()->AddLine(center, endpoint, colOutline);
         }
     }
