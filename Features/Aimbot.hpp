@@ -38,8 +38,8 @@ struct Aimbot {
     int AimbotMode = 0;
 
 
-    float PitchP;
-    float YawP;
+    float PitchP = 100;
+    float YawP = 100;
     bool RCSEnabled = true;
 
     bool ClosestHitbox = false;
