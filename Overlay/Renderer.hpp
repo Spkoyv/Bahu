@@ -685,7 +685,7 @@ static void DrawRectFilled(ImDrawList* canvas, float x, float y, float x2, float
         for (int i = 0; i < numPlayers; i++) {
             float angle = (360.0 - targetyaw) * (M_PI / 180.0); // Replace this with the actual yaw of the player, then convert it to radians.
             ImVec2 endpoint(center.x + aimlinelength * cos(angle), center.y + aimlinelength * sin(angle));
-            ImGui::GetWindowDrawList()->AddLine(center, endpoint, colOutline);
+            ImGui::GetWindowDrawList()->AddLine(center, endpoint, colOutline, 1.f);
         }
     }
 };
