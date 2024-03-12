@@ -22,7 +22,6 @@
 #include "Features/Radar.hpp"
 #include "Features/Triggerbot.hpp"
 #include "Features/Misc.hpp"
-#include "Features/RCS.hpp"
 #include "Features/Glow.hpp"
 //#include "Features/Test.hpp"
 
@@ -53,7 +52,7 @@ Sense* ESP = new Sense(Map, Players, GameCamera, Myself, X11Display);
 Radar* MapRadar = new Radar(X11Display, Players, GameCamera, Map, Myself);
 Glow* GlowESP = new Glow(Map, Players, GameCamera, Myself);
 Aimbot* AimAssist = new Aimbot(X11Display, Map, Myself, Players);
-RCS* Recoil = new RCS(X11Display, Map, Myself);
+//RCS* Recoil = new RCS(X11Display, Map, Myself);
 Triggerbot* Trigger = new Triggerbot(X11Display, Map, Myself, Players);
 Misc* MiscTab = new Misc(X11Display, Map, Myself, Players);
 //Test* Testing = new Test(X11Display, Map, Myself);
@@ -81,7 +80,7 @@ void HandleKeyEvent(Display* display, XEvent* Event) {
 }
 
 void X11EventListener() {
-    Display* display = XOpenDisplay(nullptr);
+    Display* display = XOpenDisplay(NULL);
     Window root = DefaultRootWindow(display);
     XGrabKey(display, XKeysymToKeycode(display, XK_Insert), AnyModifier, root, False, GrabModeAsync, GrabModeAsync);
     XEvent event;
@@ -702,99 +701,99 @@ void LoadConfig() {
     AimAssist->ThrowingKnifeMaxDistance1 = Config::Aimbot::ThrowingKnifeMaxDistance1;
     
     //RCS //
-    Recoil->RCSEnabled = Config::RCS::RCSEnabled;
-    Recoil->OnADS = Config::RCS::OnADS;
-    Recoil->PitchPower = Config::RCS::PitchPower;
-    Recoil->YawPower = Config::RCS::YawPower;
-    //Weapons
-    Recoil->P2020 = Config::RCS::P2020;
-    Recoil->RE45 = Config::RCS::RE45;
-    Recoil->Alternator = Config::RCS::Alternator;
-    Recoil->R99 = Config::RCS::R99;
-    Recoil->R301 = Config::RCS::R301;
-    Recoil->Spitfire = Config::RCS::Spitfire;
-    Recoil->G7 = Config::RCS::G7;
-    Recoil->Flatline = Config::RCS::Flatline;
-    Recoil->Hemlock = Config::RCS::Hemlock;
-    Recoil->Repeater = Config::RCS::Repeater;
-    Recoil->Rampage = Config::RCS::Rampage;
-    Recoil->CARSMG = Config::RCS::CARSMG;
-    Recoil->Havoc = Config::RCS::Havoc;
-    Recoil->Devotion = Config::RCS::Devotion;
-    Recoil->LSTAR = Config::RCS::LSTAR;
-    Recoil->TripleTake = Config::RCS::TripleTake;
-    Recoil->Volt = Config::RCS::Volt;
-    Recoil->Nemesis = Config::RCS::Nemesis;
-    Recoil->Mozambique = Config::RCS::Mozambique;
-    Recoil->EVA8 = Config::RCS::EVA8;
-    Recoil->Peacekeeper = Config::RCS::Peacekeeper;
-    Recoil->Mastiff = Config::RCS::Mastiff;
-    Recoil->Longbow = Config::RCS::Longbow;
-    Recoil->ChargeRifle = Config::RCS::ChargeRifle;
-    Recoil->Sentinel = Config::RCS::Sentinel;
-    Recoil->Wingman = Config::RCS::Wingman;
-    Recoil->Prowler = Config::RCS::Prowler;
-    Recoil->Kraber = Config::RCS::Kraber;
-    
-    //---------------Advanced---------------//
-    Recoil->AdvancedRCS = Config::RCS::AdvancedRCS;
-    //Weapons
-    Recoil->P2020Pitch = Config::RCS::P2020Pitch;
-    Recoil->P2020Yaw = Config::RCS::P2020Yaw;
-    Recoil->RE45Pitch = Config::RCS::RE45Pitch;
-    Recoil->RE45Yaw = Config::RCS::RE45Yaw;
-    Recoil->AlternatorPitch = Config::RCS::AlternatorPitch;
-    Recoil->AlternatorYaw = Config::RCS::AlternatorYaw;
-    Recoil->R99Pitch = Config::RCS::R99Pitch;
-    Recoil->R99Yaw = Config::RCS::R99Yaw;
-    Recoil->R301Pitch = Config::RCS::R301Pitch;
-    Recoil->R301Yaw = Config::RCS::R301Yaw;
-    Recoil->SpitfirePitch = Config::RCS::SpitfirePitch;
-    Recoil->SpitfireYaw = Config::RCS::SpitfireYaw;
-    Recoil->G7Pitch = Config::RCS::G7Pitch;
-    Recoil->G7Yaw = Config::RCS::G7Yaw;
-    Recoil->FlatlinePitch = Config::RCS::FlatlinePitch;
-    Recoil->FlatlineYaw = Config::RCS::FlatlineYaw;
-    Recoil->HemlockPitch = Config::RCS::HemlockPitch;
-    Recoil->HemlockYaw = Config::RCS::HemlockYaw;
-    Recoil->RepeaterPitch = Config::RCS::RepeaterPitch;
-    Recoil->RepeaterYaw = Config::RCS::RepeaterYaw;
-    Recoil->RampagePitch = Config::RCS::RampagePitch;
-    Recoil->RampageYaw = Config::RCS::RampageYaw;
-    Recoil->CARSMGPitch = Config::RCS::CARSMGPitch;
-    Recoil->CARSMGYaw = Config::RCS::CARSMGYaw;
-    Recoil->HavocPitch = Config::RCS::HavocPitch;
-    Recoil->HavocYaw = Config::RCS::HavocYaw;
-    Recoil->DevotionPitch = Config::RCS::DevotionPitch;
-    Recoil->DevotionYaw = Config::RCS::DevotionYaw;
-    Recoil->LSTARPitch = Config::RCS::LSTARPitch;
-    Recoil->LSTARYaw = Config::RCS::LSTARYaw;
-    Recoil->TripleTakePitch = Config::RCS::TripleTakePitch;
-    Recoil->TripleTakeYaw = Config::RCS::TripleTakeYaw;
-    Recoil->VoltPitch = Config::RCS::VoltPitch;
-    Recoil->VoltYaw = Config::RCS::VoltYaw;
-    Recoil->NemesisPitch = Config::RCS::NemesisPitch;
-    Recoil->NemesisYaw = Config::RCS::NemesisYaw;
-    Recoil->MozambiquePitch = Config::RCS::MozambiquePitch;
-    Recoil->MozambiqueYaw = Config::RCS::MozambiqueYaw;
-    Recoil->EVA8Pitch = Config::RCS::EVA8Pitch;
-    Recoil->EVA8Yaw = Config::RCS::EVA8Yaw;
-    Recoil->PeacekeeperPitch = Config::RCS::PeacekeeperPitch;
-    Recoil->PeacekeeperYaw = Config::RCS::PeacekeeperYaw;
-    Recoil->MastiffPitch = Config::RCS::MastiffPitch;
-    Recoil->MastiffYaw = Config::RCS::MastiffYaw;
-    Recoil->LongbowPitch = Config::RCS::LongbowPitch;
-    Recoil->LongbowYaw = Config::RCS::LongbowYaw;
-    Recoil->ChargeRiflePitch = Config::RCS::ChargeRiflePitch;
-    Recoil->ChargeRifleYaw = Config::RCS::ChargeRifleYaw;
-    Recoil->SentinelPitch = Config::RCS::SentinelPitch;
-    Recoil->SentinelYaw = Config::RCS::SentinelYaw;
-    Recoil->WingmanPitch = Config::RCS::WingmanPitch;
-    Recoil->WingmanYaw = Config::RCS::WingmanYaw;
-    Recoil->ProwlerPitch = Config::RCS::ProwlerPitch;
-    Recoil->ProwlerYaw = Config::RCS::ProwlerYaw;
-    Recoil->KraberPitch = Config::RCS::KraberPitch;
-    Recoil->KraberYaw = Config::RCS::KraberYaw;
+    //RCSEnabled = Config::RCS::RCSEnabled;
+    //Recoil->OnADS = Config::RCS::OnADS;
+    //PitchP = Config::RCS::PitchPower;
+    //YawP = Config::RCS::YawPower;
+    ////Weapons
+    //Recoil->P2020 = Config::RCS::P2020;
+    //Recoil->RE45 = Config::RCS::RE45;
+    //Recoil->Alternator = Config::RCS::Alternator;
+    //Recoil->R99 = Config::RCS::R99;
+    //Recoil->R301 = Config::RCS::R301;
+    //Recoil->Spitfire = Config::RCS::Spitfire;
+    //Recoil->G7 = Config::RCS::G7;
+    //Recoil->Flatline = Config::RCS::Flatline;
+    //Recoil->Hemlock = Config::RCS::Hemlock;
+    //Recoil->Repeater = Config::RCS::Repeater;
+    //Recoil->Rampage = Config::RCS::Rampage;
+    //Recoil->CARSMG = Config::RCS::CARSMG;
+    //Recoil->Havoc = Config::RCS::Havoc;
+    //Recoil->Devotion = Config::RCS::Devotion;
+    //Recoil->LSTAR = Config::RCS::LSTAR;
+    //Recoil->TripleTake = Config::RCS::TripleTake;
+    //Recoil->Volt = Config::RCS::Volt;
+    //Recoil->Nemesis = Config::RCS::Nemesis;
+    //Recoil->Mozambique = Config::RCS::Mozambique;
+    //Recoil->EVA8 = Config::RCS::EVA8;
+    //Recoil->Peacekeeper = Config::RCS::Peacekeeper;
+    //Recoil->Mastiff = Config::RCS::Mastiff;
+    //Recoil->Longbow = Config::RCS::Longbow;
+    //Recoil->ChargeRifle = Config::RCS::ChargeRifle;
+    //Recoil->Sentinel = Config::RCS::Sentinel;
+    //Recoil->Wingman = Config::RCS::Wingman;
+    //Recoil->Prowler = Config::RCS::Prowler;
+    //Recoil->Kraber = Config::RCS::Kraber;
+    //
+    ////---------------Advanced---------------//
+    //Recoil->AdvancedRCS = Config::RCS::AdvancedRCS;
+    ////Weapons
+    //Recoil->P2020Pitch = Config::RCS::P2020Pitch;
+    //Recoil->P2020Yaw = Config::RCS::P2020Yaw;
+    //Recoil->RE45Pitch = Config::RCS::RE45Pitch;
+    //Recoil->RE45Yaw = Config::RCS::RE45Yaw;
+    //Recoil->AlternatorPitch = Config::RCS::AlternatorPitch;
+    //Recoil->AlternatorYaw = Config::RCS::AlternatorYaw;
+    //Recoil->R99Pitch = Config::RCS::R99Pitch;
+    //Recoil->R99Yaw = Config::RCS::R99Yaw;
+    //Recoil->R301Pitch = Config::RCS::R301Pitch;
+    //Recoil->R301Yaw = Config::RCS::R301Yaw;
+    //Recoil->SpitfirePitch = Config::RCS::SpitfirePitch;
+    //Recoil->SpitfireYaw = Config::RCS::SpitfireYaw;
+    //Recoil->G7Pitch = Config::RCS::G7Pitch;
+    //Recoil->G7Yaw = Config::RCS::G7Yaw;
+    //Recoil->FlatlinePitch = Config::RCS::FlatlinePitch;
+    //Recoil->FlatlineYaw = Config::RCS::FlatlineYaw;
+    //Recoil->HemlockPitch = Config::RCS::HemlockPitch;
+    //Recoil->HemlockYaw = Config::RCS::HemlockYaw;
+    //Recoil->RepeaterPitch = Config::RCS::RepeaterPitch;
+    //Recoil->RepeaterYaw = Config::RCS::RepeaterYaw;
+    //Recoil->RampagePitch = Config::RCS::RampagePitch;
+    //Recoil->RampageYaw = Config::RCS::RampageYaw;
+    //Recoil->CARSMGPitch = Config::RCS::CARSMGPitch;
+    //Recoil->CARSMGYaw = Config::RCS::CARSMGYaw;
+    //Recoil->HavocPitch = Config::RCS::HavocPitch;
+    //Recoil->HavocYaw = Config::RCS::HavocYaw;
+    //Recoil->DevotionPitch = Config::RCS::DevotionPitch;
+    //Recoil->DevotionYaw = Config::RCS::DevotionYaw;
+    //Recoil->LSTARPitch = Config::RCS::LSTARPitch;
+    //Recoil->LSTARYaw = Config::RCS::LSTARYaw;
+    //Recoil->TripleTakePitch = Config::RCS::TripleTakePitch;
+    //Recoil->TripleTakeYaw = Config::RCS::TripleTakeYaw;
+    //Recoil->VoltPitch = Config::RCS::VoltPitch;
+    //Recoil->VoltYaw = Config::RCS::VoltYaw;
+    //Recoil->NemesisPitch = Config::RCS::NemesisPitch;
+    //Recoil->NemesisYaw = Config::RCS::NemesisYaw;
+    //Recoil->MozambiquePitch = Config::RCS::MozambiquePitch;
+    //Recoil->MozambiqueYaw = Config::RCS::MozambiqueYaw;
+    //Recoil->EVA8Pitch = Config::RCS::EVA8Pitch;
+    //Recoil->EVA8Yaw = Config::RCS::EVA8Yaw;
+    //Recoil->PeacekeeperPitch = Config::RCS::PeacekeeperPitch;
+    //Recoil->PeacekeeperYaw = Config::RCS::PeacekeeperYaw;
+    //Recoil->MastiffPitch = Config::RCS::MastiffPitch;
+    //Recoil->MastiffYaw = Config::RCS::MastiffYaw;
+    //Recoil->LongbowPitch = Config::RCS::LongbowPitch;
+    //Recoil->LongbowYaw = Config::RCS::LongbowYaw;
+    //Recoil->ChargeRiflePitch = Config::RCS::ChargeRiflePitch;
+    //Recoil->ChargeRifleYaw = Config::RCS::ChargeRifleYaw;
+    //Recoil->SentinelPitch = Config::RCS::SentinelPitch;
+    //Recoil->SentinelYaw = Config::RCS::SentinelYaw;
+    //Recoil->WingmanPitch = Config::RCS::WingmanPitch;
+    //Recoil->WingmanYaw = Config::RCS::WingmanYaw;
+    //Recoil->ProwlerPitch = Config::RCS::ProwlerPitch;
+    //Recoil->ProwlerYaw = Config::RCS::ProwlerYaw;
+    //Recoil->KraberPitch = Config::RCS::KraberPitch;
+    //Recoil->KraberYaw = Config::RCS::KraberYaw;
     
     // Glow //
     GlowESP->GlowEnabled = Config::Glow::GlowEnabled;
@@ -1672,7 +1671,7 @@ void LoadOverlaySave() {
 void SaveConfig() {
     if (!Home->Save()) std::cout << "something went wrong trying to save Home settings" << std::endl;
     if (!AimAssist->Save()) std::cout << "something went wrong trying to save Aimbot settings" << std::endl;
-    if (!Recoil->Save()) std::cout << "something went wrong trying to save RCS settings" << std::endl;
+    //if (!Recoil->Save()) std::cout << "something went wrong trying to save RCS settings" << std::endl;
     if (!ESP->Save()) std::cout << "something went wrong trying to save ESP settings" << std::endl;
     if (!GlowESP->Save()) std::cout << "something went wrong trying to save Glow settings" << std::endl;
     if (!Trigger->Save()) std::cout << "something went wrong trying to save Triggerbot settings" << std::endl;
@@ -1728,7 +1727,7 @@ void RenderUI() {
         // Draw Settings //
         Home->SetUIStyle(); //Home Tab
         AimAssist->RenderUI();
-        Recoil->RenderUI();
+        //Recoil->RenderUI();
         Trigger->RenderUI();
         GlowESP->RenderUI();
         ESP->RenderUI();
@@ -1817,7 +1816,7 @@ bool UpdateCore() {
         // Updates //
         GameCamera->Update();
         GlowESP->Update();
-        Recoil->Update();
+        //Recoil->Update();
         AimAssist->Update();
         Trigger->Update();
         MiscTab->Update();
@@ -2083,13 +2082,13 @@ int main(int argc, char *argv[]) {
 	    std::cout << "                    ░░░░░                                                                   " << std::endl;
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "zap client - ver 0.3.1" << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "By Gerosity" << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
+    //std::cout << "By Gerosity" << std::endl;
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "For Game Version v3.0.57.21" << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // Initialize Overlay Window //
     if (!InitializeOverlayWindow()) return -1;
