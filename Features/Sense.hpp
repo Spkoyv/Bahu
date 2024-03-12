@@ -842,40 +842,25 @@ struct Sense
 					PlayersNear++;
 
 
-                    if(aimline)
-                    {
-                        Vector3D DesiredAngles;
-                        Vector2D ppos;
+                    //if(aimline)
+                    //{
+                        //Vector3D DesiredAngles;
+                        //Vector2D ppos;
 
 
-                        Vector3D localPos = Myself->CameraPosition;
-                        Vector3D entityPos = p->GetBonePosition(HitboxType::Head);
+                        //Vector3D localPos = Myself->CameraPosition;
+                        //Vector3D entityPos = p->GetBonePosition(HitboxType::Head);
 
-                        float distance = localPos.Distance(entityPos);
-                        Vector3D ptrVelocity = p->AbsoluteVelocity;
+                        //float distance = localPos.Distance(entityPos);
+                       // Vector3D ptrVelocity = p->AbsoluteVelocity;
 
-                        float bulletGravity = Myself->WeaponProjectileScale;
-                        float bulletSpeed = Myself->WeaponProjectileSpeed;
-                        long WeaponID = Myself->WeaponEntity;
+                        //float bulletGravity = Myself->WeaponProjectileScale;
+                        //float bulletSpeed = Myself->WeaponProjectileSpeed;
+                        //long WeaponID = Myself->WeaponEntity;
 
-                        entityPos = Resolver::PredictPos(entityPos, ptrVelocity, distance, bulletSpeed, bulletGravity, WeaponID);
+                        //entityPos = Resolver::PredictPos(entityPos, ptrVelocity, distance, bulletSpeed, bulletGravity, WeaponID);
 
-                        //float time = localPos.Distance(entityPos) / bulletSpeed;
-                        //entityPos.z += (750 * bulletGravity * 0.5f) * (time * time);
-                        //Vector3D velDelta = ptrVelocity * time;
-                        //entityPos.x += velDelta.x;
-                        //entityPos.y += velDelta.y;
-                        //entityPos.z += velDelta.z;
-
-
-                        //Vector2D calcedAngle = CalcAngle(localPos, entityPos);
-                        //Vector2D viewAngle = Read<Vector2>(ProcessId, LocalPlayer + OFFSET_VIEWANGLES);
-                        //Vector2D newAngle = smoothAimMove(viewAngle, calcedAngle, AimBot_Smooth);
-                        //newAngle.Normalize();
-
-
-
-                        GameCamera->WorldToScreen(entityPos, ppos);
+                        //GameCamera->WorldToScreen(entityPos, ppos);
 
                         //if (weapon.bullet_speed().value != 1.0f ) {
                         //    auto bullet_time = target_pos.distance(Myself->CameraPosition) / weapon.bullet_speed().value;
@@ -885,8 +870,8 @@ struct Sense
                         //}
 
 
-                        Renderer::DrawLine(Canvas, HeadPositionSK, ppos, 1.f, ImColor(255,0,0));
-                    }
+                        //Renderer::DrawLine(Canvas, HeadPositionSK, ppos, 1.f, ImColor(255,0,0));
+                    //}
 
 
 					// Draw Info Bars
