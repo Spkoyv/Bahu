@@ -3737,8 +3737,6 @@ struct Aimbot {
     }
 
     void StartAiming() {
-        if(RCSEnabled) std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
         // Get Target Angle
         QAngle DesiredAngles = QAngle(0, 0);
         if (!GetAngle(CurrentTarget, DesiredAngles))
