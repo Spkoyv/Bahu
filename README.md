@@ -122,7 +122,7 @@ Instructions & Menu Previews are down below
 **3. Clone repo**
 
     git clone https://github.com/Spkoyv/Bahu.git
-    cd zap-client
+    cd Bahu
 
 **4. Build and Run**
 
@@ -130,7 +130,7 @@ Instructions & Menu Previews are down below
     cd build
     cmake ..
     make
-    sudo ./zapclient
+    sudo ./Bahu
     
 **5. Press Insert to toggle the Menu (You can only interact with the Menu and the game when the menu is active).**
 
