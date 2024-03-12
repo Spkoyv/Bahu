@@ -121,7 +121,7 @@ Instructions & Menu Previews are down below
 
 **3. Clone repo**
 
-    git clone https://github.com/Ruabc123/zap-client.git
+    git clone https://github.com/Spkoyv/Bahu.git
     cd zap-client
 
 **4. Build and Run**
