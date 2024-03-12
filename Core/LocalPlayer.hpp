@@ -5,6 +5,7 @@
 #include "../Math/Vector3D.hpp"
 #include "../Math/FloatVector2D.hpp"
 #include "../Math/FloatVector3D.hpp"
+#include "QAngle.hpp"
 
 struct LocalPlayer {
     long BasePointer;
@@ -16,6 +17,8 @@ struct LocalPlayer {
     bool InJump;
 
     int Team;
+    int Squad;
+
     Vector3D LocalOrigin;
     Vector3D CameraPosition;
 
@@ -62,9 +65,11 @@ struct LocalPlayer {
         InJump = Memory::Read<bool>(OFF_REGION + OFF_IN_JUMP) > 0;
 
         Team = Memory::Read<int>(BasePointer + OFF_TEAM_NUMBER);
+        Squad = Memory::Read<int>(BasePointer + OFF_SQUAD);
         localOrigin = Memory::Read<FloatVector3D>(BasePointer + OFF_LOCAL_ORIGIN);
         LocalOrigin = Memory::Read<Vector3D>(BasePointer + OFF_LOCAL_ORIGIN);
         CameraPosition = Memory::Read<Vector3D>(BasePointer + OFF_CAMERAORIGIN);
+
         ViewAngles = Memory::Read<Vector2D>(BasePointer + OFF_VIEW_ANGLES);
         PunchAngles = Memory::Read<Vector2D>(BasePointer + OFF_PUNCH_ANGLES);
         PunchAnglesDifferent = PunchAnglesPrevious.Subtract(PunchAngles);
@@ -73,10 +78,10 @@ struct LocalPlayer {
         ViewYaw = Memory::Read<float>(BasePointer + OFF_YAW);
         
         cameraPosition = Memory::Read<FloatVector3D>(BasePointer + OFF_CAMERAORIGIN);
-        viewAngles = Memory::Read<FloatVector2D>(BasePointer + OFF_VIEW_ANGLES);
-        punchAngles = Memory::Read<FloatVector2D>(BasePointer + OFF_PUNCH_ANGLES);
-        punchAnglesDiff = punchAnglesPrev.subtract(punchAngles);
-        punchAnglesPrev = punchAngles;
+        //viewAngles = Memory::Read<FloatVector2D>(BasePointer + OFF_VIEW_ANGLES);
+        //punchAngles = Memory::Read<FloatVector2D>(BasePointer + OFF_PUNCH_ANGLES);
+        //punchAnglesDiff = punchAnglesPrev.subtract(punchAngles);
+        //punchAnglesPrev = punchAngles;
 
         if (!IsDead && !IsKnocked) {
             long WeaponHandle = Memory::Read<long>(BasePointer + OFF_WEAPON_HANDLE);
@@ -117,5 +122,29 @@ struct LocalPlayer {
     void setYaw(float angle) {
         long ptrLong = BasePointer + OFF_VIEW_ANGLES + sizeof(float);
         Memory::Write<float>(ptrLong, angle);
+    }
+
+    void set_angles(QAngle angles)
+    {
+        Memory::Write<QAngle>(BasePointer + OFF_VIEW_ANGLES, normalize_angles(angles));
+    }
+
+    inline QAngle normalize_angles(QAngle angle)
+    {
+        while (angle.x > 89.0f)
+            angle.x -= 180.f;
+
+        while (angle.x < -89.0f)
+            angle.x += 180.f;
+
+        while (angle.y > 180.f)
+            angle.y -= 360.f;
+
+        while (angle.y < -180.f)
+        {
+            angle.y += 360.f;
+        }
+
+        return angle;
     }
 };

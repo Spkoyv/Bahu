@@ -2,6 +2,7 @@
 #include <string>
 #include "Offsets.hpp"
 #include "LocalPlayer.hpp"
+#include "../Core/Level.hpp"
 #include "../Utils/Config.hpp"
 #include "../Utils/Modules.hpp"
 #include "../Utils/Memory.hpp"
@@ -18,14 +19,19 @@
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
 
+
+
+
 struct Player {
     LocalPlayer* Myself;
+    
 
     int Index;
     long BasePointer;
 
     std::string Name;
     int Team;
+    int Squad;
     
     int GlowEnable;
     int GlowThroughWall;
@@ -86,12 +92,15 @@ struct Player {
         this->Myself = Me;
     }
 
+
+
     void Read() {
         BasePointer = Memory::Read<long>(OFF_REGION + OFF_ENTITY_LIST + ((Index + 1) << 5));
         if (BasePointer == 0) return;
 
         Name = Memory::ReadString(BasePointer + OFF_NAME);
         Team = Memory::Read<int>(BasePointer + OFF_TEAM_NUMBER);
+
 
         if (!IsPlayer() && !IsDummy()) { BasePointer = 0; return; }
         IsDead = (IsDummy()) ? false : Memory::Read<short>(BasePointer + OFF_LIFE_STATE) > 0;
@@ -110,16 +119,16 @@ struct Player {
         IsAimedAt = LastTimeAimedAtPrevious < LastTimeAimedAt;
         LastTimeAimedAtPrevious = LastTimeAimedAt;
 
-        LastVisibleTime = Memory::Read<int>(BasePointer + OFF_LAST_VISIBLE_TIME);
-        IsVisible = IsAimedAt || LastTimeVisiblePrevious < LastVisibleTime;
-        LastTimeVisiblePrevious = LastVisibleTime;
-
+        IsVisible = (Memory::Read<float>(BasePointer + OFF_LAST_VISIBLE_TIME) + 0.2f) >= Memory::Read<float>(Myself->BasePointer + OFF_TIME_BASE);
+	
         Health = Memory::Read<int>(BasePointer + OFF_HEALTH);
         MaxHealth = Memory::Read<int>(BasePointer + OFF_MAXHEALTH);
         Shield = Memory::Read<int>(BasePointer + OFF_SHIELD);
         MaxShield = Memory::Read<int>(BasePointer + OFF_MAXSHIELD);
         
-        if (!IsDead && !IsKnocked && IsHostile) {
+
+
+        if (!IsDead && IsHostile) {
             long WeaponHandle = Memory::Read<long>(BasePointer + OFF_WEAPON_HANDLE);
             long WeaponHandleMasked = WeaponHandle & 0xffff;
             WeaponEntity = Memory::Read<long>(OFF_REGION + OFF_ENTITY_LIST + (WeaponHandleMasked << 5));
@@ -129,29 +138,15 @@ struct Player {
             
             WeaponIndex = Memory::Read<int>(WeaponEntity + OFF_WEAPON_INDEX);
         }
-        
-        if (Myself->IsValid() && Modules::Home::TeamGamemode) {
+
+        if (Myself->IsValid()) {
         	IsLocal = Myself->BasePointer == BasePointer;
-                IsAlly = Myself->Team == Team;
+            IsAlly = IsTeammate();
+
                 IsHostile = !IsAlly;
                 DistanceToLocalPlayer = Myself->LocalOrigin.Distance(LocalOrigin);
                 Distance2DToLocalPlayer = Myself->LocalOrigin.To2D().Distance(LocalOrigin.To2D());
 		    if (IsVisible) {
-		        aimbotDesiredAngles = calcDesiredAngles();
-		        aimbotDesiredAnglesIncrement = calcDesiredAnglesIncrement();
-		        aimbotScore = calcAimbotScore();
-		    }
-        }
-        else if (Myself->IsValid() && !Modules::Home::TeamGamemode) {
-                IsLocal = Myself->BasePointer == BasePointer;
-                nonBR = !Modules::Home::TeamGamemode;
-                friendly = (nonBR)
-                    ? (Myself->Team % 2 == 0 && Team % 2 == 0) || (Myself->Team % 2 != 0 && Team % 2 != 0)
-                    : Myself->Team == Team;
-              
-                IsAlly = friendly;
-                IsHostile = !IsAlly;
-		    if (IsVisible) { //For AimbotMode Grinder
 		        aimbotDesiredAngles = calcDesiredAngles();
 		        aimbotDesiredAnglesIncrement = calcDesiredAnglesIncrement();
 		        aimbotScore = calcAimbotScore();
@@ -172,7 +167,7 @@ struct Player {
 
     std::string GetPlayerName(){
         uintptr_t NameIndex = Memory::Read<uintptr_t>(BasePointer + OFF_NAME_INDEX);
-        uintptr_t NameOffset = Memory::Read<uintptr_t>(OFF_REGION + OFF_NAME_LIST + ((NameIndex - 1) << 4 ));
+        uintptr_t NameOffset = Memory::Read<uintptr_t>(OFF_REGION + OFF_NAME_LIST + ((NameIndex - 1) * 24 ));
         std::string PlayerName = Memory::ReadPlayerName(NameOffset, 64);
         return PlayerName;
     }
@@ -229,7 +224,7 @@ struct Player {
         if (!IsValid())return false;
         if (IsDummy()) return true;
         if (IsDead) return false;
-        if (IsKnocked) return false;
+        //if (IsKnocked) return false;
         return true;
     }
 
@@ -341,5 +336,18 @@ struct Player {
 
     float calcAimbotScore() {
         return (1000 - (fabs(aimbotDesiredAnglesIncrement.x) + fabs(aimbotDesiredAnglesIncrement.y)));
+    }
+
+    bool IsTeammate()
+    {
+
+        if (LvMap::m_mixtape)
+        {
+            return (Team & 1) == (Myself->Team & 1);
+        }
+        else
+        {
+            return Team == Myself->Team;
+        }
     }
 };
