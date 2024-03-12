@@ -39,7 +39,7 @@ struct Radar {
     int MiniMapScaleY = 218;
     int MiniMapDotSize = 5;
     int MiniMapBlackBGSize = 0;
-    int linelength = 35;
+    int linelength = 150;
     bool MiniMapGuides = false;
     
     bool BigMap = false;
@@ -114,7 +114,7 @@ struct Radar {
 				ImGui::ColorEdit4("Circle Color##Radar", Modules::Radar::CircleColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
 
                 ImGui::Text("Enemy aiming line");
-                ImGui::SliderInt("Aiming line length", &linelength, 1, 75);
+                ImGui::SliderInt("Aiming line length", &linelength, 1, 150);
                 //ImGui::ColorEdit4("Circle Color##Radar", Modules::Radar::CircleColor, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs);
             }
 			ImGui::EndChild();
