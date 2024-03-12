@@ -619,7 +619,7 @@ struct Aimbot {
                 if(RCSEnabled) {
 
                     //ImGui::Text("NoRecoil Settings");
-                    if (ImGui::CollapsingHeader("Recoil Ammount Removed", nullptr)) {
+                    if (ImGui::CollapsingHeader("Recoil Amount Removed", nullptr)) {
                         ImGui::SliderFloat("Pitch Recoil Removed %", &PitchP, 1, 100, "%.1f");
                         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
                         ImGui::SetTooltip("X axis Recoil Percent Removed");
@@ -3770,8 +3770,8 @@ struct Aimbot {
 
             if(RCSEnabled) {
                 QAngle punch_angle =  Memory::Read<QAngle>(Myself->BasePointer + OFF_PUNCH_ANGLES);
-                ////punch_angle.x *=  (PitchP / 100.f);
-                ////punch_angle.y *=  (YawP / 100.f);
+                punch_angle.x *=  (PitchP / 100.f);
+                punch_angle.y *=  (YawP / 100.f);
 
                 DesiredAngles -=  punch_angle;
 
@@ -3795,8 +3795,8 @@ struct Aimbot {
             if(RCSEnabled) {
                 QAngle punch_angle = Memory::Read<QAngle>(Myself->BasePointer + OFF_PUNCH_ANGLES);
 
-                //punch_angle.x *=  (PitchP / 100.f);
-                //punch_angle.y *=  (YawP / 100.f);
+                punch_angle.x *=  (PitchP / 100.f);
+                punch_angle.y *=  (YawP / 100.f);
 
                 DesiredAngles -= punch_angle;
             }
