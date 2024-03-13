@@ -41,12 +41,12 @@ bool ErrorLogging = false;
 namespace Aimbot {
 bool RCSEnabled = true;
 bool Enabled = true;
-int BindMethod = 0;
+int BindMethod = 1;
 int AimBind = 56;
 int ExtraBind = 57;
 bool OnFire = true;
 bool OnADS = true;
-bool ClosestHitbox = false;
+bool ClosestHitbox = true;
 int HitBox = 2;
 int AimbotMode = 0;
 
